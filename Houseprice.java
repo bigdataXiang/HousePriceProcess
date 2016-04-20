@@ -50,12 +50,26 @@ public class Houseprice {
 	public static String traffic ;
 	public static String url ;
 	public static String property_company;
-	public static String folder="D:\\Crawldata_BeiJing\\anjuke\\rentout\\0326\\anjuke_rentout0108\\anjuke_rentout0108_result.txt";
+	public static String folder="D:\\Crawldata_BeiJing\\5i5j\\rentout\\";
 
 
 	public static void main(String[] args){
 		//getArea("http://zu.fang.com/chuzu/1_59606601_-1.htm");
-		rentoutToJson(folder);
+		//rentoutToJson(folder+"woaiwojia_rentout0108\\woaiwojia_rentout0108_result.txt");
+		
+		//rentoutToJson(folder+"woaiwojia_rentout0119\\woaiwojia_rentout0119_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout0127\\woaiwojia_rentout0127_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout0219\\woaiwojia_rentout0219_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout0227\\woaiwojia_rentout0227_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout0309\\woaiwojia_rentout0309_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout0314\\woaiwojia_rentout0314_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout1125\\woaiwojia_rentout1125_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout1201\\woaiwojia_rentout1201_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout1207\\woaiwojia_rentout1207_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout1214\\woaiwojia_rentout1214_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout1222\\woaiwojia_rentout1222_result.txt");
+		rentoutToJson(folder+"woaiwojia_rentout1231\\woaiwojia_rentout1231_result.txt");
+	
 	}
 	public static String getArea(String url){
 		String area="";
@@ -127,9 +141,11 @@ public class Houseprice {
 	public static void rentoutToJson(String folder){
 		Vector<String> pois=FileTool.Load(folder, "utf-8");
 		boolean fang=false;
+		String poi="";
 	try{
+		int n=pois.size();
 		for(int i=0;i<pois.size();i++){
-			String poi=pois.elementAt(i);
+			poi=pois.elementAt(i);
 			JSONObject jsonObjArr = new JSONObject();
 
 			//title ：标题
@@ -181,7 +197,7 @@ public class Houseprice {
 			
 			//price ：总价
 			if(poi.indexOf("PRICE")!=-1){
-				price=Tool.getStrByKey(poi, "<PRICE>", "</PRICE>", "</PRICE>").replace("元/月","");
+				price=Tool.getStrByKey(poi, "<PRICE>", "</PRICE>", "</PRICE>").replace("元/月","").replace("未知", "");
 				jsonObjArr.put("price",price);
 			}else{
 				price="null";
@@ -197,6 +213,9 @@ public class Houseprice {
 			}else{
 				if(poi.indexOf("AREA")!=-1&&poi.indexOf("HOUSE_AREA")==-1){
 					area=Tool.getStrByKey(poi, "<AREA>", "</AREA>", "</AREA>").replace("平米", "").replace("m²", "").replace("平方米", "");
+					if(area.equals("0")){
+						area="null";
+					}
 					jsonObjArr.put("area",area);
 				}else if(poi.indexOf("HOUSE_AREA")!=-1){
 					area=Tool.getStrByKey(poi, "<HOUSE_AREA>", "</HOUSE_AREA>", "</HOUSE_AREA>").replace("平米", "").replace("m²", "").replace("平方米", "");
@@ -446,12 +465,15 @@ public class Houseprice {
 			}
 			*/
 						
-		System.out.println(jsonObjArr.toString());	
+		System.out.println(i+":"+jsonObjArr.toString());	
 		FileTool.Dump(jsonObjArr.toString(), folder + "-Json.txt", "utf-8");
 		}
 		
 	}catch(JSONException e){
 		e.getStackTrace();
+	}catch(NumberFormatException e){
+		System.out.println(e.getMessage());
+		System.out.println(poi);
 	}
 		
 	}
