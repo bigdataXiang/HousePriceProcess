@@ -11,10 +11,14 @@ import org.htmlparser.filters.TagNameFilter;
 import org.htmlparser.nodes.TagNode;
 import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
-import org.json.JSONException;
-import org.json.JSONObject;
+
+import net.sf.json.JSONException;
+//import org.json.JSONException;
+//import org.json.JSONObject;
+import net.sf.json.JSONObject;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.svail.gridprocess.GridLayoutLines;
 import com.svail.util.FileTool;
 import com.svail.util.HTMLTool;
 import com.svail.util.Tool;
@@ -68,7 +72,7 @@ public class Houseprice {
 		//rentoutToJson(folder+"woaiwojia_rentout1207\\woaiwojia_rentout1207_result.txt");
 		//rentoutToJson(folder+"woaiwojia_rentout1214\\woaiwojia_rentout1214_result.txt");
 		//rentoutToJson(folder+"woaiwojia_rentout1222\\woaiwojia_rentout1222_result.txt");
-		rentoutToJson(folder+"woaiwojia_rentout1231\\woaiwojia_rentout1231_result.txt");
+		//rentoutToJson(folder+"woaiwojia_rentout1231\\woaiwojia_rentout1231_result.txt");
 	
 	}
 	public static String getArea(String url){
