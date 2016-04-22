@@ -1,5 +1,6 @@
 package com.svail.houseprice;
 
+import java.util.ArrayList;
 import java.util.Vector;
 
 import org.htmlparser.NodeFilter;
@@ -73,8 +74,99 @@ public class Houseprice {
 		//rentoutToJson(folder+"woaiwojia_rentout1214\\woaiwojia_rentout1214_result.txt");
 		//rentoutToJson(folder+"woaiwojia_rentout1222\\woaiwojia_rentout1222_result.txt");
 		//rentoutToJson(folder+"woaiwojia_rentout1231\\woaiwojia_rentout1231_result.txt");
-	
+		//getCode("D:/Crawldata_BeiJing/anjuke/rentout/0326/1000/anjuke_rentout1231_result-Json-1000.txt");
+		getTimeSeriesPrice();
+		
+		
 	}
+	public static void getTimeSeriesPrice(){
+		String[] url={
+                 "anjuke_rentout1125_result-Json-1000-15446.txt",
+				 "anjuke_rentout1201_result-Json-1000-15446.txt",
+				 "anjuke_rentout1207_result-Json-1000-15446.txt",
+				 "anjuke_rentout1214_result-Json-1000-15446.txt",
+				 "anjuke_rentout1222_result-Json-1000-15446.txt",
+				 "anjuke_rentout1231_result-Json-1000-15446.txt",
+				 "anjuke_rentout0108_result-Json-1000-15446.txt",
+				 "anjuke_rentout0219_result-Json-1000-15446.txt"
+				 };
+			for(int i=0;i<url.length;i++){
+				//getPrice("D:/Crawldata_BeiJing/5i5j/rentout/1000/15446/"+url[i]);
+				
+				getCode("D:/Crawldata_BeiJing/5i5j/rentout/1000/15446/"+url[i]);
+				System.out.println("完成第"+i+"个文件的处理");
+			}
+	}
+	/**
+	 * 获取同一网格里的房源的平均价格
+	 * @param file
+	 */
+	public static void getPrice(String file){
+		Vector<String> pois = FileTool.Load(file, "utf-8");
+		String poi="";
+		 ArrayList UnitPrice=new ArrayList();
+		 double total=0;
+		 double average=0;
+		try{
+			for(int i=0;i<pois.size();i++){
+				poi=pois.elementAt(i);
+				JSONObject jsonObject = JSONObject.fromObject(poi);
+				
+				//Object price = jsonObject.get("price");				
+				//Object area = jsonObject.get("area");
+				//Object house_type=jsonObject.get("house_type");
+				Object unit_price=jsonObject.get("unit_price");
+				
+				UnitPrice.add(unit_price);
+				
+				/*
+				String total=price.toString()+","+area.toString()+","+house_type.toString()+","+unit_price.toString();
+                FileTool.Dump(total, file.replace(".txt", "") + "-unitprice.txt", "utf-8");
+                */
+              }
+			for(int k=0;k<UnitPrice.size();k++){
+				total+=Double.parseDouble(UnitPrice.get(k).toString());
+			}
+			
+			average=total/UnitPrice.size();
+			System.out.println(average);
+
+		}catch(net.sf.json.JSONException e){
+			FileTool.Dump(poi, file.replace(".txt", "") + "-exception.txt", "utf-8");
+		}
+		
+	}
+	/**
+	 * 将某一个code的房源全部挑出来进行分析研究
+	 * @param file
+	 */
+	public static void getCode(String file){
+		
+		Vector<String> pois = FileTool.Load(file, "utf-8");
+		String poi="";
+		try{
+			for(int i=0;i<pois.size();i++){
+				poi=pois.elementAt(i);
+				JSONObject jsonObject = JSONObject.fromObject(poi);
+				Object code = jsonObject.get("code");
+				String codestr = code.toString();
+				int codeint = Integer.parseInt(codestr);
+				if(codeint==15446){
+					FileTool.Dump(poi, file.replace(".txt", "") + "-15446.txt", "utf-8");
+				}
+			}
+
+		}catch(net.sf.json.JSONException e){
+			FileTool.Dump(poi, file.replace(".txt", "") + "-exception.txt", "utf-8");
+		}
+		
+		
+	}
+	/**
+	 * 获取房天下的房源数据的面积
+	 * @param url
+	 * @return
+	 */
 	public static String getArea(String url){
 		String area="";
 		int monitor=0;
