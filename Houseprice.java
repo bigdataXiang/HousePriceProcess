@@ -81,19 +81,23 @@ public class Houseprice {
 	}
 	public static void getTimeSeriesPrice(){
 		String[] url={
-                 "anjuke_rentout1125_result-Json-1000-15446.txt",
-				 "anjuke_rentout1201_result-Json-1000-15446.txt",
-				 "anjuke_rentout1207_result-Json-1000-15446.txt",
-				 "anjuke_rentout1214_result-Json-1000-15446.txt",
-				 "anjuke_rentout1222_result-Json-1000-15446.txt",
-				 "anjuke_rentout1231_result-Json-1000-15446.txt",
-				 "anjuke_rentout0108_result-Json-1000-15446.txt",
-				 "anjuke_rentout0219_result-Json-1000-15446.txt"
+                 "woaiwojia_rentout1125_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout1201_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout1207_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout1214_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout1222_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout0108_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout0119_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout0127_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout0219_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout0227_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout0309_result-Json-1000-15446.txt",
+				 "woaiwojia_rentout0314_result-Json-1000-15446.txt"
 				 };
 			for(int i=0;i<url.length;i++){
-				//getPrice("D:/Crawldata_BeiJing/5i5j/rentout/1000/15446/"+url[i]);
+				getPrice("D:/Crawldata_BeiJing/5i5j/rentout/1000/15446/"+url[i]);
 				
-				getCode("D:/Crawldata_BeiJing/5i5j/rentout/1000/15446/"+url[i]);
+				//getCode("D:/Crawldata_BeiJing/5i5j/rentout/1000/15446/"+url[i]);
 				System.out.println("完成第"+i+"个文件的处理");
 			}
 	}
@@ -124,11 +128,17 @@ public class Houseprice {
                 FileTool.Dump(total, file.replace(".txt", "") + "-unitprice.txt", "utf-8");
                 */
               }
-			for(int k=0;k<UnitPrice.size();k++){
-				total+=Double.parseDouble(UnitPrice.get(k).toString());
-			}
 			
-			average=total/UnitPrice.size();
+			int pricecounts=0;
+			for(int k=0;k<UnitPrice.size();k++){
+				double unitprice=Double.parseDouble(UnitPrice.get(k).toString());
+				if(unitprice!=0){
+					total+=unitprice;
+					pricecounts++;
+				}
+				
+			}			
+			average=total/pricecounts;
 			System.out.println(average);
 
 		}catch(net.sf.json.JSONException e){
