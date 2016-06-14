@@ -60,13 +60,28 @@ public class Houseprice {
 	public static String contact;
 	public static String notice;
 	public static String structure;
+	public static String character;
+	public static String biult_type;
+	
+	public static String  loop;
+	public static String  sales_address;
+	public static String  open_time;
+	public static String  completed_time;
+	public static String serve_address;
+	public static String licence;
+	public static String down_payment;
 
 
 	public static void main(String[] args){
 		
-		getTimeSeriesPrice();		
-		//addData("D:/Crawldata_BeiJing/忘却的那两个月/fang_resold/"+"fang_resold1117_Null_result.txt",
-		//		"E:/房地产可视化/近一年数据分类汇总/fang/resold/"+"fang_resold1117_result.txt");
+		//getTimeSeriesPrice();		
+		//addData("E:/房地产可视化/近一年数据分类汇总/anjuke/resold/anjuke_resold0726_0801 (2).txt",                               //"D:/Crawldata_BeiJing/忘却的那两个月/fang_resold/"+"fang_resold1117_Null_result.txt",
+			//	"E:/房地产可视化/近一年数据分类汇总/anjuke/resold/anjuke_resold0726_0801.txt");
+		
+		
+		
+		yearMonthDay("E:/房地产可视化/近一年数据分类汇总/fang/resold/json/fang_resold1222_result-Json.txt");
+		
 	}
 	/**
 	 * 将sourcefile文件中的数据添加到targetfile中
@@ -81,37 +96,162 @@ public class Houseprice {
 		}
 		System.out.println("新增了"+pois.size()+"条数据");
 	}
+	public static void yearMonthDay(String folder){
+		
+		Vector<String> pois=FileTool.Load(folder, "utf-8");
+		
+		System.out.println("数据总计："+pois.size());
+		int count=0;
+		for(int i=0;i<pois.size();i++){
+			
+			String poi=pois.elementAt(i);
+			JSONObject obj=JSONObject.fromObject(poi);
+			JSONObject date= new JSONObject();
+			
+			String time="";
+			if(obj.containsKey("time")){
+				time=obj.getString("time");
+				String[] dates= new String[3];				
+				
+				if(time.indexOf("售价：")!=-1&&time.indexOf("参考首付")!=-1){
+					String str=time.substring(time.indexOf("售价：")+"售价：".length(),time.indexOf("参考首付："));
+					if(str.indexOf("万")!=-1){
+						String str1=str.substring(0, str.indexOf("万"));
+						obj.put("price", str1);
+					}
+					if(str.indexOf("）")!=-1&&str.indexOf("（")!=-1){
+						String str2=str.substring(str.indexOf("（")+"（".length(), str.indexOf("）")).replace("元/�", "元/平米");
+						obj.put("unit_price", str2);
+					}
+					
+				}
+				
+				if(time.indexOf("/")!=-1){
+					if(time.indexOf("售价")!=-1){
+						time=time.substring(0, time.indexOf("售价"));
+						obj.put("time", time);
+					}
+					dates=time.split("/");
+					
+				}
+				
+            String year=dates[0];
+            date.put(" year", year);
+            String month=dates[1];
+            date.put(" month", month);
+            String day=dates[2];
+            date.put(" day", day);                           
+                               
+			}else{
+				System.out.println(i+":"+poi);
+			}
+			obj.put("date", date);
+			
+			String house_type="";
+			String rooms="";
+			String halls="";
+			String kitchen="";
+			String bathrooms="";
+
+			JSONObject layout=new JSONObject();
+			if(obj.containsKey("house_type")){
+				house_type=obj.getString("house_type");//1室1厅1厨1卫
+				
+				if(house_type.indexOf("室")!=-1){
+					rooms=house_type.substring(0, house_type.indexOf("室"));
+					layout.put("rooms", rooms);
+				}else{
+					layout.put("rooms", rooms);
+				}
+				if(house_type.indexOf("厅")!=-1){
+					halls=house_type.substring(house_type.indexOf("室")+"室".length(), house_type.indexOf("厅"));
+					layout.put("halls", halls);
+				}else{
+					layout.put("halls", halls);
+				}
+				if(house_type.indexOf("厨")!=-1){
+					kitchen=house_type.substring(house_type.indexOf("厅")+"厅".length(), house_type.indexOf("厨"));
+					layout.put("kitchen", kitchen);
+				}else{
+					layout.put("kitchen", kitchen);
+				}
+				if(house_type.indexOf("卫")!=-1){
+					if(house_type.indexOf("厨")!=-1){
+						bathrooms=house_type.substring(house_type.indexOf("厨")+"厨".length(), house_type.indexOf("卫"));
+						layout.put("bathrooms", bathrooms);
+					}else{
+						bathrooms=house_type.substring(house_type.indexOf("厅")+"厅".length(), house_type.indexOf("卫"));
+						layout.put("bathrooms", bathrooms);
+					}
+					
+				}else{
+					layout.put("bathrooms", bathrooms);
+				}
+				
+			}else{
+				System.out.println(i+":"+poi);
+			}
+			obj.put("layout", layout);
+			
+			
+/*			
+			String price="";
+			String area="";
+			if(obj.containsKey("price")){
+				price=obj.getString("price").replace("万", "");
+				obj.put("price", price);
+			}
+			if(obj.containsKey("area")){
+				area=obj.getString("area").replace("建筑面积：", "").replace("�", "");
+				obj.put("area", area);
+			}
+			
+			double unit_price=Double.parseDouble(price)/Double.parseDouble(area);
+			obj.put("unit_price", unit_price);
+*/
+			
+			//System.out.println(i);
+			
+			FileTool.Dump(obj.toString().replace(" ", ""), folder.replace(".txt", "")+"-tidy.txt", "utf-8");
+			count++;
+		}
+		System.out.println("数据处理："+count);
+	}
 	
 	//E:\数据备份\Data_Classify\finish_classify\fang\fang_result\fang_rentout   中有7-9月的原文件
 	public static void getTimeSeriesPrice(){
-		String folder="E:/房地产可视化/近一年数据分类汇总/fang/resold/";
+		String folder="E:/房地产可视化/近一年数据分类汇总/anjuke/resold/";
 		String[] date={
-				"2014_10","2014_11","2014_12",
-				"2015_01","2015_02","2015_03","2015_04","2015_05","2015_06","2015_07","2015_08","2015_09","2015_10","2015_11","2015_12",
-				"2016_01","2016_02","2016_03","2016_04","2016_05","2016_06"
-				//"1125","1201","1207","1214","1222","1231"
-                // "0509","0516","0523","0530","0606","0613",
-               //  "0620","0627","0704","0711","0718","0725",
-				//"0108","0119","0127","0219","0227","0309","0314","0324","0401","0414","0428","0510","0520","0527","0603"
+                 "0530","0620","0704","0711","0718","0725","0801","0808","0815","0822","0829","0905","0912","0919",
 				 };
 		// "1125","1201","1207","1214","1222","1231","0108","0119","0127","0219","0227","0309","0314",
 		//"0324","0401","0414","0428","0509","0510","0523","0527","0603" 
-		String type="fang_NewBuilding";
+		/*	    "2014_10","2014_11","2014_12",
+				"2015_01","2015_02","2015_03","2015_04","2015_05","2015_06","2015_07","2015_08","2015_09","2015_10","2015_11","2015_12",
+				"2016_01","2016_02","2016_03","2016_04","2016_05","2016_06"
+		 * 
+		 */
+		String type="anjuke_resold";
 		String path="";//folder+type+date[0]+"_result.txt";
 		//toJson(path,false,"2015-"+date[0].substring(0, 2)+"-"+date[0].substring(2));
 		
 		
 			for(int i=0;i<date.length;i++){//date.length
-				path=folder+type+date[i]+"_result.txt";
-				if(i<10){
-					if(i<0){
-						toJson(path,false,"2015-"+date[i].substring(0, 2)+"-"+date[i].substring(2));
+				path=folder+type+date[i]+".txt";
+				if(i>0){
+					if(i>0){
+						toJson(path,false,"2015-"+date[i].substring(0, 2)+"-"+date[i].substring(2));//"2015-"+date[i].substring(0, 2)+"-"+date[i].substring(2)
 					}else{
-						toJson(path,false,"2016-"+date[i].substring(0, 2)+"-"+date[i].substring(2));
+						//toJson(path,false,"2016-"+date[i].substring(0, 2)+"-"+date[i].substring(2));//"2016-"+date[i].substring(0, 2)+"-"+date[i].substring(2)
 					}
 					
 				}else{
-					toJson(path,true,"2016-"+date[i].substring(0, 2)+"-"+date[i].substring(2));
+					if(i<6){
+						toJson(path,true,"2015-"+date[i].substring(0, 2)+"-"+date[i].substring(2));//"2016-"+date[i].substring(0, 2)+"-"+date[i].substring(2)
+					}else{
+						toJson(path,true,"2016-"+date[i].substring(0, 2)+"-"+date[i].substring(2));
+					}
+					
 				}
 				
 				System.out.println("完成第"+(i+1)+"个文件的处理");
@@ -136,7 +276,7 @@ public class Houseprice {
 				if(json){
 					jsonObjArr=JSONObject.fromObject(poi);
 					jsonObjArr.put("crawldate",date);	
-					System.out.println(i+":"+jsonObjArr.toString());	
+					//System.out.println(i+":"+jsonObjArr.toString());	
 					FileTool.Dump(jsonObjArr.toString(), folder.replace(".txt", "") + "-Json.txt", "utf-8");
 					
 				}else{
@@ -179,43 +319,37 @@ public class Houseprice {
 					
 					
 					//longitude :经度 latitude ：纬度
-					if(poi.indexOf("Coordinate")!=-1){
+					if(poi.indexOf("<Coordinate>")!=-1){
 						String[] coor=Tool.getStrByKey(poi, "<Coordinate>", "</Coordinate>", "</Coordinate>").split(";");
 						longitude=coor[0];
 						latitude=coor[1];
 						jsonObjArr.put("longitude",longitude);
 						jsonObjArr.put("latitude",latitude);
-					}else if(poi.indexOf("Coor")!=-1&&poi.indexOf("PostCoor")==-1){
+					}else if(poi.indexOf("<Coor>")!=-1&&poi.indexOf("<PostCoor>")==-1){
 						String[] coor=Tool.getStrByKey(poi, "<Coor>", "</Coor>", "</Coor>").split(";");
 						longitude=coor[0];
 						latitude=coor[1];
 						jsonObjArr.put("longitude",longitude);
 						jsonObjArr.put("latitude",latitude);
-					}else if(poi.indexOf("coordinate")!=-1){
+					}else if(poi.indexOf("<coordinate>")!=-1){
 						String[] coor=Tool.getStrByKey(poi, "<coordinate>", "</coordinate>", "</coordinate>").split(";");
 						longitude=coor[0];
 						latitude=coor[1];
 						jsonObjArr.put("longitude",longitude);
 						jsonObjArr.put("latitude",latitude);
-					}else if(poi.indexOf("PostCoor")!=-1){
+					}else if(poi.indexOf("<PostCoor>")!=-1){
 						String[] coor=Tool.getStrByKey(poi, "<PostCoor>", "</PostCoor>", "</PostCoor>").split(";");
 						longitude=coor[0];
 						latitude=coor[1];
 						jsonObjArr.put("longitude",longitude);
 						jsonObjArr.put("latitude",latitude);
 					}
-					else{
-						longitude="null";
-						latitude="null";
-						jsonObjArr.put("longitude",longitude);
-						jsonObjArr.put("latitude",latitude);
-					}
 					
 					//region：坐标所定位的行政区划层级
-					if(poi.indexOf("Reg")!=-1){
+					if(poi.indexOf("<Reg>")!=-1){
 						region=Tool.getStrByKey(poi, "<Reg>", "</Reg>", "</Reg>");
 						jsonObjArr.put("region",region);
-					}else if(poi.indexOf("PostReg")!=-1){
+					}else if(poi.indexOf("<PostReg>")!=-1){
 						region=Tool.getStrByKey(poi, "<PostReg>", "</PostReg>", "</PostReg>");
 						jsonObjArr.put("region",region);
 					}
@@ -225,7 +359,7 @@ public class Houseprice {
 					}
 					
 					//title ：标题
-					if(poi.indexOf("TITLE")!=-1&&poi.indexOf("</PostReg>>")==-1&&poi.indexOf("</Reg>LE>")==-1){
+					if(poi.indexOf("<TITLE>")!=-1&&poi.indexOf("</PostReg>>")==-1&&poi.indexOf("</Reg>LE>")==-1){
 						title=Tool.getStrByKey(poi, "<TITLE>", "</TITLE>", "</TITLE>");
 						jsonObjArr.put("title",title);
 					}else if(poi.indexOf("TITLE")!=-1&&poi.indexOf("</PostReg>>")!=-1){
@@ -235,42 +369,24 @@ public class Houseprice {
 						title=Tool.getStrByKey(poi, "</Reg>LE>", "</TITLE>", "</TITLE>");
 						jsonObjArr.put("title",title);
 					}
-					else{
-						title="null";
-						jsonObjArr.put("title",title);
-					}
+
 					
 					//time ：时间
-					if(poi.indexOf("TIME")!=-1){
+					if(poi.indexOf("<TIME>")!=-1){
 						time=Tool.getStrByKey(poi, "<TIME>", "</TIME>", "</TIME>");
 						jsonObjArr.put("time",time);
-					}else{
-						time="null";
-						jsonObjArr.put("time",time);
 					}
 					
-					//price ：总价
-					if(poi.indexOf("PRICE")!=-1){
+					//price ：总价或者新房均价
+					if(poi.indexOf("<PRICE>")!=-1){
 						price=Tool.getStrByKey(poi, "<PRICE>", "</PRICE>", "</PRICE>").replace("元/月","").replace("未知", "").replace("万", "").replace("万元", "");
 						jsonObjArr.put("price",price);
-					}else{
-						price="null";
-						jsonObjArr.put("price",price);
 					}
 					
-					//house_type：户型
-					if(poi.indexOf("HOUSE_TYPE")!=-1){
-						house_type=Tool.getStrByKey(poi, "<HOUSE_TYPE>", "</HOUSE_TYPE>", "</HOUSE_TYPE>");
-						jsonObjArr.put("house_type",house_type);
-					}else if(poi.indexOf("TYPE")!=-1){
-						house_type=Tool.getStrByKey(poi, "<TYPE>", "</TYPE>", "</TYPE>");
-						jsonObjArr.put("house_type",house_type);
-					}else if(poi.indexOf("BUILDTYPE")!=-1){
-						house_type=Tool.getStrByKey(poi, "<BUILDTYPE>", "</BUILDTYPE>", "</BUILDTYPE>");
-						jsonObjArr.put("house_type",house_type);
-					}else{
-						house_type="null";
-						jsonObjArr.put("house_type",house_type);
+					//down_payment:最低首付
+					if(poi.indexOf("<DOWN_PAYMENT>")!=-1){
+						down_payment=Tool.getStrByKey(poi, "<PRICE>", "</PRICE>", "</PRICE>");
+						jsonObjArr.put("down_payment",down_payment);
 					}
 					
 					//area ：面积
@@ -280,33 +396,163 @@ public class Houseprice {
 						jsonObjArr.put("area",area);
 						
 					}else{
-						if(poi.indexOf("AREA")!=-1&&poi.indexOf("HOUSE_AREA")==-1&&poi.indexOf("BUILDING_AREA")==-1){
+						if(poi.indexOf("<AREA>")!=-1&&poi.indexOf("HOUSE_AREA")==-1&&poi.indexOf("BUILDING_AREA")==-1){
+							//String temp=poi.substring(0, poi.indexOf("</FLOOR>"));
 							area=Tool.getStrByKey(poi, "<AREA>", "</AREA>", "</AREA>").replace("平米", "").replace("m²", "").replace("平方米", "").replace("㎡", "").replace("O", "").replace("建筑面积：", "");
 							if(area.equals("0")){
 								area="null";
 							}
 							jsonObjArr.put("area",area);
-						}else if(poi.indexOf("HOUSE_AREA")!=-1){
+						}else if(poi.indexOf("<HOUSE_AREA>")!=-1){
 							area=Tool.getStrByKey(poi, "<HOUSE_AREA>", "</HOUSE_AREA>", "</HOUSE_AREA>").replace("�", "").replace("平米", "").replace("m²", "").replace("平方米", "").replace("㎡", "").replace("O", "").replace("建筑面积：", "");
 							jsonObjArr.put("area",area);
-						}else if(poi.indexOf("BUILDING_AREA")!=-1){
-							area=Tool.getStrByKey(poi, "<BUILDING_AREA>", "</BUILDING_AREA>", "</BUILDING_AREA>").replace("�", "").replace("平米", "").replace("m²", "").replace("平方米", "").replace("㎡", "").replace("O", "").replace("建筑面积：", "");
+						}else if(poi.indexOf("<BUILDING_AREA>")!=-1){
+							area=Tool.getStrByKey(poi, "<BUILDING_AREA>", "</BUILDING_AREA>", "</BUILDING_AREA>").replace(".㎡", "").replace("�", "").replace("平米", "").replace("m²", "").replace("平方米", "").replace("㎡", "").replace("O", "").replace("建筑面积：", "");
 							jsonObjArr.put("area",area);
 						}
-						else{
-							area="null";
-							jsonObjArr.put("area",area);
-						}
-					}	
-				
-
+					}
+					
 					//unit_price ：每平方米单价
-					if(!(price.equals("null"))&&!(area.equals("null"))){
+					if(poi.indexOf("<UNIT_PRICE>")!=-1){
+						String unitprice=Tool.getStrByKey(poi, "<UNIT_PRICE>", "</UNIT_PRICE>", "</UNIT_PRICE>").replace("元/平米", "");
+						unit_price=Double.parseDouble(unitprice);
+						jsonObjArr.put("unit_price",unit_price);
+					}else if(!(price.equals("null"))&&!(area.equals("null"))){
 						unit_price=Double.parseDouble(price)/Double.parseDouble(area);
 						jsonObjArr.put("unit_price",unit_price);
 					}else{
 						unit_price=0;
 						jsonObjArr.put("unit_price",unit_price);
+					}
+					
+					//community ：所在小区
+					if(poi.indexOf("<COMMUNITY>")!=-1){
+						community=Tool.getStrByKey(poi, "<COMMUNITY>", "</COMMUNITY>", "<COMMUNITY>");
+						jsonObjArr.put("community",community);
+					}else if(poi.indexOf("<BUILDING_NAME>")!=-1){
+						community=Tool.getStrByKey(poi, "<BUILDING_NAME>", "</BUILDING_NAME>", "<BUILDING_NAME>");
+						jsonObjArr.put("community",community);
+					}
+
+					//location：所在区域
+					if(poi.indexOf("<LOCATION>")!=-1){
+						location=Tool.getStrByKey(poi, "<LOCATION>", "</LOCATION>", "</LOCATION>");
+						jsonObjArr.put("location",location);
+					}else if(poi.indexOf("<REGION>")!=-1){
+						location=Tool.getStrByKey(poi, "<REGION>", "</REGION>", "</REGION>");
+						jsonObjArr.put("location",location);
+					}else if(poi.indexOf("<DISTRICT>")!=-1){
+						location=Tool.getStrByKey(poi, "<DISTRICT>", "</DISTRICT>", "</DISTRICT>");
+						jsonObjArr.put("location",location);
+					}
+					
+					//address ：地址
+					if(poi.indexOf("<ADDRESS>")!=-1){
+						address=Tool.getStrByKey(poi, "<ADDRESS>", "</ADDRESS>", "</ADDRESS>").replace("(地图)", "");
+						jsonObjArr.put("address",address);
+					}
+					
+					//developer：开发商
+					if(poi.indexOf("<DEVELOPER>")!=-1){
+						developer=Tool.getStrByKey(poi, "<DEVELOPER>", "</DEVELOPER>", "</DEVELOPER>");
+						jsonObjArr.put("developer",developer);
+					}
+					
+					//property_company:物业公司
+					if(poi.indexOf("<PROPERTY>")!=-1){
+						property_company=Tool.getStrByKey(poi, "<PROPERTY>", "</PROPERTY>", "</PROPERTY>");
+						jsonObjArr.put("property_company",property_company);
+					}else if(poi.indexOf("<SERVER>")!=-1){
+						property_company=Tool.getStrByKey(poi, "<SERVER>", "</SERVER>", "</SERVER>");
+						jsonObjArr.put("property_company",property_company);
+					}
+					
+					//property：房屋性质（住宅之类的）
+					if(poi.indexOf("<PROPERTY_TYPE>")!=-1){
+						property=Tool.getStrByKey(poi, "<PROPERTY_TYPE>", "</PROPERTY_TYPE>", "</PROPERTY_TYPE>");
+						jsonObjArr.put("property",property);
+					}else if(poi.indexOf("<TYPE>")!=-1){
+						property=Tool.getStrByKey(poi, "<TYPE>", "</TYPE>", "</TYPE>");
+						jsonObjArr.put("property",property);
+					}else if(poi.indexOf("<BUILDING_TYPE>")!=-1){
+						property=Tool.getStrByKey(poi, "<BUILDING_TYPE>", "</BUILDING_TYPE>", "</BUILDING_TYPE>");
+						jsonObjArr.put("property",property);
+					}else if(poi.indexOf("<BUILDING_USAGE>")!=-1){
+						property=Tool.getStrByKey(poi, "<BUILDING_USAGE>", "</BUILDING_USAGE>", "</BUILDING_USAGE>");
+						jsonObjArr.put("property",property);
+					}
+					
+					//property_fee:物业费
+					if(poi.indexOf("<PROPERTY_FEE>")!=-1){
+						property_fee=Tool.getStrByKey(poi, "<PROPERTY_FEE>", "</PROPERTY_FEE>", "</PROPERTY_FEE>");
+						jsonObjArr.put("property_fee",property_fee);
+					}
+					
+					
+					//house_type：户型
+					if(poi.indexOf("<HOUSE_TYPE>")!=-1){
+						house_type=Tool.getStrByKey(poi, "<HOUSE_TYPE>", "</HOUSE_TYPE>", "</HOUSE_TYPE>");
+						jsonObjArr.put("house_type",house_type);
+					}else if(poi.indexOf("<TYPE>")!=-1){
+						house_type=Tool.getStrByKey(poi, "<TYPE>", "</TYPE>", "</TYPE>");
+						jsonObjArr.put("house_type",house_type);
+					}else if(poi.indexOf("<BUILDTYPE>")!=-1){
+						house_type=Tool.getStrByKey(poi, "<BUILDTYPE>", "</BUILDTYPE>", "</BUILDTYPE>");
+						jsonObjArr.put("house_type",house_type);
+					}
+					
+					//direction ：朝向
+					if(poi.indexOf("<DIRECTION>")!=-1){
+						direction=Tool.getStrByKey(poi, "<DIRECTION>", "</DIRECTION>", "</DIRECTION>");
+						jsonObjArr.put("direction",direction);
+					}else if(poi.indexOf("<ORIENTATION>")!=-1){
+						direction=Tool.getStrByKey(poi, "<ORIENTATION>", "</ORIENTATION>", "</ORIENTATION>");
+						jsonObjArr.put("direction",direction);
+					}else if(poi.indexOf("<BUILDING_DIR>")!=-1){
+						direction=Tool.getStrByKey(poi, "<BUILDING_DIR>", "</BUILDING_DIR>", "</BUILDING_DIR>");
+						jsonObjArr.put("direction",direction);
+					}
+					
+					//floor ：楼层
+					if(poi.indexOf("<FLOOR>")!=-1&&poi.indexOf("BUILDING_FLOOR")==-1){
+						floor=Tool.getStrByKey(poi, "<FLOOR>", "</FLOOR>", "</FLOOR>");
+						jsonObjArr.put("floor",floor);
+					}else if(poi.indexOf("<BUILDING_FLOOR>")!=-1){
+						floor=Tool.getStrByKey(poi, "<BUILDING_FLOOR>", "</BUILDING_FLOOR>", "</BUILDING_FLOOR>");
+						jsonObjArr.put("floor",floor);
+					}
+					
+					//fitment ：装修	
+					if(poi.indexOf("<DECORATION>")!=-1){
+						fitment=Tool.getStrByKey(poi, "<DECORATION>", "</DECORATION>", "</DECORATION>");
+						jsonObjArr.put("fitment",fitment);
+					}else if(poi.indexOf("<FITMENT>")!=-1){
+						fitment=Tool.getStrByKey(poi, "<FITMENT>", "</FITMENT>", "</FITMENT>");
+						jsonObjArr.put("fitment",fitment);
+					}else if(poi.indexOf("<BUILDING_CONDITION>")!=-1){
+						fitment=Tool.getStrByKey(poi, "<BUILDING_CONDITION>", "</BUILDING_CONDITION>", "</BUILDING_CONDITION>");
+						jsonObjArr.put("fitment",fitment);
+					}
+
+					
+					//totalarea:总面积
+					if(poi.indexOf("<TOTAL_AREA>")!=-1){
+						totalarea=Tool.getStrByKey(poi, "<TOTAL_AREA>", "</TOTAL_AREA>", "</TOTAL_AREA>").replace("(大型小区)", "").replace("(中型小区)", "");
+						jsonObjArr.put("totalarea",totalarea);
+					}else if(poi.indexOf("<AREA>")!=-1){
+						String temp=poi.substring(poi.indexOf("</FLOOR>"));
+						totalarea=Tool.getStrByKey(temp, "<AREA>", "</AREA>", "</AREA>").replace("(大型小区)", "").replace("(中型小区)", "");
+						if(totalarea.indexOf("平米")==-1){
+							jsonObjArr.put("totalarea",totalarea);
+						}
+						
+					}
+					
+					
+					//households：总户数
+					if(poi.indexOf("HOUSEHOLDS")!=-1){
+						households=Tool.getStrByKey(poi, "<HOUSEHOLDS>", "</HOUSEHOLDS>", "</HOUSEHOLDS>");
+						jsonObjArr.put("households",households);
 					}
 					
 					//built_year:建筑年代
@@ -319,92 +565,47 @@ public class Houseprice {
 					}else if(poi.indexOf("BUILDING_TIME")!=-1){
 						built_year=Tool.getStrByKey(poi, "<BUILDING_TIME>", "</BUILDING_TIME>", "</BUILDING_TIME>");
 						jsonObjArr.put("built_year",built_year);
-					}else{
-						built_year="null";
-						jsonObjArr.put("built_year",built_year);
 					}
 					
-					//direction ：朝向
-					if(poi.indexOf("DIRECTION")!=-1){
-						direction=Tool.getStrByKey(poi, "<DIRECTION>", "</DIRECTION>", "</DIRECTION>");
-						jsonObjArr.put("direction",direction);
-					}else if(poi.indexOf("ORIENTATION")!=-1){
-						direction=Tool.getStrByKey(poi, "<ORIENTATION>", "</ORIENTATION>", "</ORIENTATION>");
-						jsonObjArr.put("direction",direction);
-					}else if(poi.indexOf("BUILDING_DIR")!=-1){
-						direction=Tool.getStrByKey(poi, "<BUILDING_DIR>", "</BUILDING_DIR>", "</BUILDING_DIR>");
-						jsonObjArr.put("direction",direction);
-					}
-					else{
-						direction="null";
-						jsonObjArr.put("direction",direction);
+					
+
+					//volume_rate:容积率
+					if(poi.indexOf("VOLUME_RATE")!=-1){
+						volume_rate=Tool.getStrByKey(poi, "<VOLUME_RATE>", "</VOLUME_RATE>", "</VOLUME_RATE>");
+						jsonObjArr.put("volume_rate",volume_rate);
+					}else if(poi.indexOf("FAR")!=-1){
+						volume_rate=Tool.getStrByKey(poi, "<FAR>", "</FAR>", "</FAR>");
+						jsonObjArr.put("volume_rate",volume_rate);
 					}
 					
-					//floor ：楼层
-					if(poi.indexOf("FLOOR")!=-1&&poi.indexOf("BUILDING_FLOOR")==-1){
-						floor=Tool.getStrByKey(poi, "<FLOOR>", "</FLOOR>", "</FLOOR>");
-						jsonObjArr.put("floor",floor);
-					}else if(poi.indexOf("BUILDING_FLOOR")!=-1){
-						floor=Tool.getStrByKey(poi, "<BUILDING_FLOOR>", "</BUILDING_FLOOR>", "</BUILDING_FLOOR>");
-						jsonObjArr.put("floor",floor);
+					//park：停车位
+					if(poi.indexOf("PARK")!=-1){
+						park=Tool.getStrByKey(poi, "<PARK>", "</PARK>", "</PARK>");
+						jsonObjArr.put("park",park);
 					}
-					else{
-						floor="null";
-						jsonObjArr.put("floor",floor);
+					
+					
+					//green_rate:绿化率
+					if(poi.indexOf("GREEN_RATE")!=-1){
+						green_rate=Tool.getStrByKey(poi, "<GREEN_RATE>", "</GREEN_RATE>", "</GREEN_RATE>");
+						jsonObjArr.put("green_rate",green_rate);
+					}else if(poi.indexOf("GREEN")!=-1){
+						green_rate=Tool.getStrByKey(poi, "<GREEN>", "</GREEN>", "</GREEN>");
+						jsonObjArr.put("green_rate",green_rate);
+					}
+					
+					//traffic:交通
+					if(poi.indexOf("TRAFFIC")!=-1){
+						traffic=Tool.getStrByKey(poi, "<TRAFFIC>", "</TRAFFIC>", "</TRAFFIC>");
+						jsonObjArr.put("traffic",traffic);
 					}
 					
 					//房屋结构：structure (平层或者高层)   resold中
 					if(poi.indexOf("BUILDING_STRUCT")!=-1){
 						structure=Tool.getStrByKey(poi, "<BUILDING_STRUCT>", "</BUILDING_STRUCT>", "</BUILDING_STRUCT>");
 						jsonObjArr.put("structure",structure);
-					}else{
-						structure="null";
-						jsonObjArr.put("structure",structure);
 					}
 					
-					//fitment ：装修	
-					if(poi.indexOf("DECORATION")!=-1){
-						fitment=Tool.getStrByKey(poi, "<DECORATION>", "</DECORATION>", "</DECORATION>");
-						jsonObjArr.put("fitment",fitment);
-					}else if(poi.indexOf("FITMENT")!=-1){
-						fitment=Tool.getStrByKey(poi, "<FITMENT>", "</FITMENT>", "</FITMENT>");
-						jsonObjArr.put("fitment",fitment);
-					}else if(poi.indexOf("BUILDING_CONDITION")!=-1){
-						fitment=Tool.getStrByKey(poi, "<BUILDING_CONDITION>", "</BUILDING_CONDITION>", "</BUILDING_CONDITION>");
-						jsonObjArr.put("fitment",fitment);
-					}
-					else{
-						fitment="null";
-						jsonObjArr.put("fitment",fitment);
-					}
-					
-					//property：房屋性质（住宅之类的）
-					if(poi.indexOf("PROPERTY_TYPE")!=-1){
-						property=Tool.getStrByKey(poi, "<PROPERTY_TYPE>", "</PROPERTY_TYPE>", "</PROPERTY_TYPE>");
-						jsonObjArr.put("property",property);
-					}else if(poi.indexOf("TYPE")!=-1){
-						property=Tool.getStrByKey(poi, "<TYPE>", "</TYPE>", "</TYPE>");
-						jsonObjArr.put("property",property);
-					}else if(poi.indexOf("BUILDING_TYPE")!=-1){
-						property=Tool.getStrByKey(poi, "<BUILDING_TYPE>", "</BUILDING_TYPE>", "</BUILDING_TYPE>");
-						jsonObjArr.put("property",property);
-					}else{
-						property="null";
-						jsonObjArr.put("property",property);
-					}
-					
-					//community ：所在小区
-					if(poi.indexOf("COMMUNITY")!=-1){
-						community=Tool.getStrByKey(poi, "<COMMUNITY>", "</COMMUNITY>", "<COMMUNITY>");
-						jsonObjArr.put("community",community);
-					}else if(poi.indexOf("BUILDING_NAME")!=-1){
-						community=Tool.getStrByKey(poi, "<BUILDING_NAME>", "</BUILDING_NAME>", "<BUILDING_NAME>");
-						jsonObjArr.put("community",community);
-					}
-					else{
-						community="null";
-						jsonObjArr.put("cmmunity",community);
-					}
 					
 					//facility：配套设施
 					if(poi.indexOf("EQUITMENT")!=-1){
@@ -414,46 +615,165 @@ public class Houseprice {
 						facility=Tool.getStrByKey(poi, "<BUILDING_SERVICE>", "</BUILDING_SERVICE>", "</BUILDING_SERVICE>");
 						jsonObjArr.put("facility",facility);
 					}
-					else{
-						facility="null";
-						jsonObjArr.put("facility",facility);
-					}
 					
-					//address ：地址
-					if(poi.indexOf("ADDRESS")!=-1){
-						address=Tool.getStrByKey(poi, "<ADDRESS>", "</ADDRESS>", "</ADDRESS>").replace("(地图)", "");
-						jsonObjArr.put("address",address);
-					}else{
-						address="null";
-						jsonObjArr.put("address",address);
-					}
 					
 					//url ：链接		
 					if(poi.indexOf("URL")!=-1){
 						url=Tool.getStrByKey(poi, "<URL>", "</URL>", "</URL>");
 						jsonObjArr.put("url",url);
-					}else{
-						url="null";
-						jsonObjArr.put("url",url);
 					}
 					
-				    jsonObjArr.put("crawldate",date);	
+				    jsonObjArr.put("crawldate",date);
+					
+					
+					
+					
+
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+				    
+				    
+				    
+				    
 					/*
 					 * 
-					 //rent_type： 求租方式
-					if(poi.indexOf("PARTMENT")!=-1){
+					 * //rent_type： 求租方式
+					if(poi.indexOf("<PARTMENT>")!=-1){
 						rent_type=Tool.getStrByKey(poi, "<PARTMENT>", "</PARTMENT>", "</PARTMENT>");
 						jsonObjArr.put("rent_type",rent_type);
-					}else if(poi.indexOf("RENT_TYPE")!=-1){
+					}else if(poi.indexOf("<RENT_TYPE>")!=-1){
 						rent_type=Tool.getStrByKey(poi, "<RENT_TYPE>", "</RENT_TYPE>", "</RENT_TYPE>");
 						jsonObjArr.put("rent_type",rent_type);
-					}else if(poi.indexOf("SCHEMA")!=-1){
+					}else if(poi.indexOf("<SCHEMA>")!=-1){
 						rent_type=Tool.getStrByKey(poi, "<SCHEMA>", "</SCHEMA>", "</SCHEMA>");
 						jsonObjArr.put("rent_type",rent_type);
-					}else{
-						rent_type="null";
-						jsonObjArr.put("rent_type",rent_type);
 					}
+					 * 
+					 * //pay_way ： 付款方式
+					if(poi.indexOf("<DEPOSIT>")!=-1){
+						pay_way=Tool.getStrByKey(poi, "<DEPOSIT>", "</DEPOSIT>", "</DEPOSIT>");
+						jsonObjArr.put("pay_way",pay_way);
+					}
+					
+					//character:别墅  用于新房中
+					if(poi.indexOf("CHARACTER")!=-1){
+						character=Tool.getStrByKey(poi, "<CHARACTER>", "</CHARACTER>", "</CHARACTER>");
+						jsonObjArr.put("character",character);
+					}
+					//biult_type:建筑类型（高层之类的）
+					if(poi.indexOf("BUILDING_TYPE")!=-1){
+						 biult_type=Tool.getStrByKey(poi, "<BUILDING_TYPE>", "</BUILDING_TYPE>", "</BUILDING_TYPE>");
+						 jsonObjArr.put("biult_type",biult_type);
+					}
+					
+					
+					
+					//loop:所在环线
+					if(poi.indexOf("LOOP_LINE")!=-1){
+						loop=Tool.getStrByKey(poi, "<LOOP_LINE>", "</LOOP_LINE>", "</LOOP_LINE>");
+						jsonObjArr.put("loop",loop);
+					}
+					
+
+					
+					
+
+					//open_time:开盘时间
+					if(poi.indexOf("SALE_TIME")!=-1){
+						open_time=Tool.getStrByKey(poi, "<SALE_TIME>", "</SALE_TIME>", "</SALE_TIME>");
+						jsonObjArr.put("open_time",open_time);
+					}
+					//completed_time：收房时间
+					if(poi.indexOf("SUBMIT_TIME")!=-1){
+						completed_time=Tool.getStrByKey(poi, "<SUBMIT_TIME>", "</SUBMIT_TIME>", "</SUBMIT_TIME>");						
+						jsonObjArr.put("completed_time",completed_time);
+					}
+					
+					
+					
+					//licence:销售证明
+                    if(poi.indexOf("LICENCE")!=-1){
+                    	licence=Tool.getStrByKey(poi, "<LICENCE>", "</LICENCE>", "</LICENCE>");
+						jsonObjArr.put("licence",licence);
+					}
+				
+					//sales_address:销售地址
+					if(poi.indexOf("SALE_ADDRESS")!=-1){
+						sales_address=Tool.getStrByKey(poi, "<SALE_ADDRESS>", "</SALE_ADDRESS>", "</SALE_ADDRESS>");
+						jsonObjArr.put("sales_address",sales_address);
+					}
+					
+					//serve_address:服务地址，物业地址
+					if(poi.indexOf("SEVER_ADDRESS")!=-1){
+						serve_address=Tool.getStrByKey(poi, "<SEVER_ADDRESS>", "</SEVER_ADDRESS>", "</SEVER_ADDRESS>");
+						jsonObjArr.put("serve_address",serve_address);
+					}
+					
+					//traffic:交通
+					if(poi.indexOf("TRAFFIC")!=-1){
+						traffic=Tool.getStrByKey(poi, "<TRAFFIC>", "</TRAFFIC>", "</TRAFFIC>");
+						jsonObjArr.put("traffic",traffic);
+					}
+					
+					
+					*/
+						
+					
+					/*
+					
+					
+					
+					*/
+					
+					
+					
+					/*
+					
+					
+					
+						
+				
+
+					
+					
+					*/
+					/*
+					
+					
+					
+				
+					
+					*/
+					
+					
+					/*
+					 * 
+					 * //heat_supply:供暖方式
+					if(poi.indexOf("HEAT_SUPPLY")!=-1){
+						heat_supply=Tool.getStrByKey(poi, "<HEAT_SUPPLY>", "</HEAT_SUPPLY>", "</HEAT_SUPPLY>");
+						jsonObjArr.put("heat_supply",heat_supply);
+					}else{
+						heat_supply="null";
+						jsonObjArr.put("heat_supply",heat_supply);
+					}
+					 
 					 
 					//checkin：入住时间
 					if(poi.indexOf("CHECKIN")!=-1){
@@ -464,14 +784,7 @@ public class Houseprice {
 						jsonObjArr.put("price",price);
 					}
 					
-					//facility：配套设施
-					if(poi.indexOf("EQUITMENT")!=-1){
-						facility=Tool.getStrByKey(poi, "<EQUITMENT>", "</EQUITMENT>", "</EQUITMENT>");
-						jsonObjArr.put("facility",facility);
-					}else{
-						facility="null";
-						jsonObjArr.put("facility",facility);
-					}
+				
 					
 					//contact：联系方式
 					if(poi.indexOf("CONTACT")!=-1){
@@ -495,124 +808,24 @@ public class Houseprice {
 			
 					/*
 				
-					//location：所在区域
-					if(poi.indexOf("LOCATION")!=-1){
-						location=Tool.getStrByKey(poi, "<LOCATION>", "</LOCATION>", "</LOCATION>");
-						jsonObjArr.put("location",location);
-					}else if(poi.indexOf("REGION")!=-1){
-						location=Tool.getStrByKey(poi, "<REGION>", "</REGION>", "</REGION>");
-						jsonObjArr.put("location",location);
-					}else if(poi.indexOf("DISTRICT")!=-1){
-						location=Tool.getStrByKey(poi, "<DISTRICT>", "</DISTRICT>", "</DISTRICT>");
-						jsonObjArr.put("location",location);
-					}
-					//else if(poi.indexOf("ADDRESS")!=-1){
-					//	location=Tool.getStrByKey(poi, "<ADDRESS>", "</ADDRESS>", "</ADDRESS>");
-					//	jsonObjArr.put("location",location);
-					//}
 					
-					else{
-						location="null";
-						jsonObjArr.put("location",location);
-					}
 					*/
 					/*
-					//pay_way ： 付款方式
-					if(poi.indexOf("DEPOSIT")!=-1){
-						pay_way=Tool.getStrByKey(poi, "<DEPOSIT>", "</DEPOSIT>", "</DEPOSIT>");
-						jsonObjArr.put("pay_way",pay_way);
-					}else{
-						pay_way="null";
-						jsonObjArr.put("pay_way",pay_way);
-					}
+					
 					*/
 	
 					
 					
 				
 					/*
-					//totalarea:总面积
-					if(poi.indexOf("TOTAL_AREA")!=-1){
-						totalarea=Tool.getStrByKey(poi, "<TOTAL_AREA>", "</TOTAL_AREA>", "</TOTAL_AREA>");
-						jsonObjArr.put("totalarea",totalarea);
-					}else{
-						totalarea="null";
-						jsonObjArr.put("totalarea",totalarea);
-					}
-					
-					//developer：开发商
-					if(poi.indexOf("DEVELOPER")!=-1){
-						developer=Tool.getStrByKey(poi, "<DEVELOPER>", "</DEVELOPER>", "</DEVELOPER>");
-						jsonObjArr.put("developer",developer);
-					}else{
-						developer="null";
-						jsonObjArr.put("developer",developer);
-					}
-					
-					//property_company:物业公司
-					if(poi.indexOf("PROPERTY")!=-1){
-						property_company=Tool.getStrByKey(poi, "<PROPERTY>", "</PROPERTY>", "</PROPERTY>");
-						jsonObjArr.put("property_company",property_company);
-					}else{
-						property_company="null";
-						jsonObjArr.put("property_company",property_company);
-					}
-					
-					//property_fee:物业费
-					if(poi.indexOf("PROPERTY_FEE")!=-1){
-						property_fee=Tool.getStrByKey(poi, "<PROPERTY_FEE>", "</PROPERTY_FEE>", "</PROPERTY_FEE>");
-						jsonObjArr.put("property_fee",property_fee);
-					}else{
-						title="null";
-						jsonObjArr.put("property_fee",property_fee);
-					}
-					
-					//households：总户数
-					if(poi.indexOf("HOUSEHOLDS")!=-1){
-						households=Tool.getStrByKey(poi, "<HOUSEHOLDS>", "</HOUSEHOLDS>", "</HOUSEHOLDS>");
-						jsonObjArr.put("households",households);
-					}else{
-						households="null";
-						jsonObjArr.put("households",households);
-					}
 					
 					
 						
-					//volume_rate:容积率
-					if(poi.indexOf("VOLUME_RATE")!=-1){
-						volume_rate=Tool.getStrByKey(poi, "<VOLUME_RATE>", "</VOLUME_RATE>", "</VOLUME_RATE>");
-						jsonObjArr.put("volume_rate",volume_rate);
-					}else{
-						volume_rate="null";
-						jsonObjArr.put("volume_rate",volume_rate);
-					}
 					
-					//green_rate:绿化率
-					if(poi.indexOf("GREEN_RATE")!=-1){
-						green_rate=Tool.getStrByKey(poi, "<GREEN_RATE>", "</GREEN_RATE>", "</GREEN_RATE>");
-						jsonObjArr.put("green_rate",green_rate);
-					}else{
-						green_rate="null";
-						jsonObjArr.put("green_rate",green_rate);
-					}
 					
-					//park：停车位
-					if(poi.indexOf("PARK")!=-1){
-						park=Tool.getStrByKey(poi, "<PARK>", "</PARK>", "</PARK>");
-						jsonObjArr.put("park",park);
-					}else{
-						park="null";
-						jsonObjArr.put("park",park);
-					}
 					
-					//heat_supply:供暖方式
-					if(poi.indexOf("HEAT_SUPPLY")!=-1){
-						heat_supply=Tool.getStrByKey(poi, "<HEAT_SUPPLY>", "</HEAT_SUPPLY>", "</HEAT_SUPPLY>");
-						jsonObjArr.put("heat_supply",heat_supply);
-					}else{
-						heat_supply="null";
-						jsonObjArr.put("heat_supply",heat_supply);
-					}
+					
+					
 					
 					
 					*/
