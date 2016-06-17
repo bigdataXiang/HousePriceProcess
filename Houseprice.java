@@ -1,6 +1,7 @@
 package com.svail.houseprice;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Vector;
 
 import org.htmlparser.NodeFilter;
@@ -80,9 +81,237 @@ public class Houseprice {
 		
 		
 		
-		yearMonthDay("E:/房地产可视化/近一年数据分类汇总/fang/resold/json/fang_resold1222_result-Json.txt");
+		//yearMonthDay("H:/房地产可视化/近一年数据分类汇总/fang/resold/json/fang_resold0606-Json.txt");
+		
+		finalCheck("E:/房地产可视化/近一年数据分类汇总/fang/rentout/json/fang_rentout1125_result-Json.txt",
+				   "E:/房地产可视化/近一年数据分类汇总/fang/rentout/原文件/fang_rentout1125_result.txt");
 		
 	}
+	   public static void finalCheck(String folder,String source){
+	    	Vector<String> pois=FileTool.Load(folder, "utf-8");
+	    	Vector<String> sources=FileTool.Load(source, "utf-8");
+	    	System.out.println("数据总计："+pois.size());
+	    	System.out.println("source总计："+sources.size());
+			int count=0;
+			
+			for(int i=0;i<pois.size();i++){
+				String poi=pois.elementAt(i);
+				
+				JSONObject obj_poi=JSONObject.fromObject(poi);
+				JSONObject obj= new JSONObject();
+				String sourcepoi=sources.elementAt(i).replace(" ", "");
+				JSONObject date= new JSONObject();
+				
+				//检查哪些元素的内容为null，为null的移除,再将整个obj_poi复制到obj上
+				Iterator<String> joKeys = obj_poi.keys();  
+		        while(joKeys.hasNext()){  
+		            String key = joKeys.next();
+		           // System.out.println(key);
+		            
+		            Object value=obj_poi.get(key);
+		            
+		           if(value.equals("\"null\"")){ //\"null\".equals("null")
+		        	   //System.out.println("value为空");
+		            }else{
+		            	obj.put(key, value);
+		            }
+		        } 
+				
+				//将cmmunity改成community
+				if(!obj.containsKey("community")){
+					if(obj.containsKey("cmmunity")){
+						String community=obj.getString("cmmunity");
+						obj.put("community", community);
+						obj.remove("cmmunity");
+					}					
+				}
+				
+				//将错位信息更正
+				String str=obj.getString("direction");
+				if(str.indexOf("层")!=-1){
+					obj.put("floor", str);
+				}
+				
+				str=obj.getString("fitment");
+				if(str.indexOf("东")!=-1||str.indexOf("南")!=-1||str.indexOf("西")!=-1||str.indexOf("北")!=-1){
+					obj.put("direction", str);
+					obj.remove("fitment");
+				}
+				
+				//将实际发布时间的年月日分别进行获取
+				String time="";
+				try{
+					if(obj.containsKey("time")){
+						if(!obj.get("time").equals("null")){
+							String[] dates= new String[3];
+							time=obj.getString("time");
+							
+							if(time.indexOf("/")!=-1){
+								
+								dates=time.split("/");
+								
+							}else if(time.indexOf("-")!=-1){						
+								
+								dates=time.split("-");
+							}
+							
+			               String year=dates[0];
+			               date.put("year", year);
+			               String month=dates[1];
+			               date.put("month", month);
+			               String day=dates[2].substring(0, 2);
+			               date.put("day", day);  
+			            
+			              obj.put("date", date);
+						}
+						
+					}
+				}catch(NullPointerException e){
+					e.getStackTrace();
+					System.out.println(i);
+				}
+				
+				
+				//检查是否含有“unit_price”字段
+				try{
+					if(!obj.containsKey("unit_price")){
+						if(!obj.getString("price").equals("\"null\"")&&!obj.getString("area").equals("\"null\"")){
+							String price=obj.getString("price").substring(0, obj.getString("price").indexOf("元/月")).replace("租金：", "");
+							obj.put("price", price);
+							String area=obj.getString("area").replace("�", "");
+							obj.put("area", area);
+							if(area.indexOf("层")==-1){
+								double unit_price=Double.parseDouble(price)/Double.parseDouble(area);
+								obj.put("unit_price", unit_price);
+							}else{
+								obj.put("floor", unit_price);
+							}
+							
+						}
+						
+					}
+				}catch(NumberFormatException e){
+					e.getStackTrace();
+					System.out.println(i);
+				}
+				
+				
+				//检查是否含有“region”字段
+				if(obj.containsKey("region")){
+					if(obj.getString("region").equals("null")){
+						String region=Tool.getStrByKey(sources.elementAt(i), "<PostReg>", "</PostReg>", "</PostReg>");
+						obj.put("region", region);
+					}
+				}
+				
+				//检查是否含有“property”字段
+				if(obj.containsKey("property")){
+					if(obj.getString("property").equals("null")){
+						String property="";
+						if(sourcepoi.indexOf("<BUILDING_TYPE>")!=-1){
+							property=Tool.getStrByKey(sourcepoi, "<BUILDING_TYPE>", "</BUILDING_TYPE>", "</BUILDING_TYPE>");
+						}
+						obj.put("property", property);
+					}
+				}
+				
+				
+				//提取户型的具体数据
+				String house_type="";
+				String rooms="";
+				String halls="";
+				String kitchen="";
+				String bathrooms="";
+
+				JSONObject layout=new JSONObject();
+				if(obj.containsKey("house_type")){
+					house_type=obj.getString("house_type");//1室1厅1厨1卫  2室2厅1卫
+					
+					if(house_type.indexOf("室")!=-1){
+						rooms=house_type.substring(0, house_type.indexOf("室"));
+						layout.put("rooms", rooms);
+					}else{
+						layout.put("rooms", rooms);
+					}
+					if(house_type.indexOf("厅")!=-1){
+						halls=house_type.substring(house_type.indexOf("室")+"室".length(), house_type.indexOf("厅"));
+						layout.put("halls", halls);
+					}else{
+						layout.put("halls", halls);
+					}
+					if(house_type.indexOf("厨")!=-1){
+						kitchen=house_type.substring(house_type.indexOf("厅")+"厅".length(), house_type.indexOf("厨"));
+						layout.put("kitchen", kitchen);
+					}else{
+						layout.put("kitchen", kitchen);
+					}
+					if(house_type.indexOf("卫")!=-1){
+						if(house_type.indexOf("厨")!=-1){
+							bathrooms=house_type.substring(house_type.indexOf("厨")+"厨".length(), house_type.indexOf("卫"));
+							layout.put("bathrooms", bathrooms);
+						}else{
+							bathrooms=house_type.substring(house_type.indexOf("厅")+"厅".length(), house_type.indexOf("卫"));
+							layout.put("bathrooms", bathrooms);
+						}
+						
+					}else{
+						layout.put("bathrooms", bathrooms);
+					}
+					
+				}else{
+					//System.out.println(i+":"+poi);
+				}
+				obj.put("layout", layout);
+				
+				//获取具体层高数据
+				//第59层(共60层)  10/28层
+				if(obj.containsKey("floor")){
+					JSONObject storeys= new JSONObject();
+					String floor=obj.getString("floor");
+					if(floor.indexOf("第")!=-1&&floor.indexOf("(")!=-1&&floor.indexOf(")")!=-1){
+						String flooron=floor.substring(0, floor.indexOf("(")).replace("第", "").replace("层", "");
+						String floors=floor.substring(floor.indexOf("(")+"(".length(),floor.indexOf(")")).replace("共", "").replace("层", "");
+						storeys.put("flooron", flooron);
+						storeys.put("floors", floors);
+					}else if(floor.indexOf("/")!=-1){
+						String flooron=floor.substring(0, floor.indexOf("/")).replace("层", "");
+						String floors=floor.substring(floor.indexOf("/")+"/".length()).replace("层", "").replace("共", "");
+						storeys.put("flooron", flooron);
+						storeys.put("floors", floors);
+					}
+					obj.put("storeys", storeys);
+				}
+				
+				
+				//获取交通信息
+				String traffic="";
+				if(sources.elementAt(i).indexOf("<TRAFFIC>")!=-1){
+					traffic=Tool.getStrByKey(sources.elementAt(i), "<TRAFFIC>", "</TRAFFIC>", "</TRAFFIC>");
+					obj.put("traffic", traffic);
+				}
+				
+				
+				
+				
+
+				FileTool.Dump(obj.toString().replace(" ", ""), folder.replace(".txt", "")+"-tidy.txt", "utf-8");
+				count++;
+			}
+			System.out.println("数据完成："+count);
+			
+		}
+	public static void getUnitPrice(String folder){
+		Vector<String> pois=FileTool.Load(folder, "utf-8");
+		for(int i=0;i<pois.size();i++){
+			String poi=pois.elementAt(i);
+			JSONObject obj=JSONObject.fromObject(poi);
+			String price=obj.getString("price");
+			String area=obj.getString("area");
+			double unit_price=Double.parseDouble(price)/Double.parseDouble(area);
+			obj.put("unit_price", unit_price);
+		}
+	}
+	
 	/**
 	 * 将sourcefile文件中的数据添加到targetfile中
 	 * @param sourcefile ： 需要被添加的数据
@@ -96,6 +325,7 @@ public class Houseprice {
 		}
 		System.out.println("新增了"+pois.size()+"条数据");
 	}
+ 
 	public static void yearMonthDay(String folder){
 		
 		Vector<String> pois=FileTool.Load(folder, "utf-8");
@@ -133,6 +363,12 @@ public class Houseprice {
 					}
 					dates=time.split("/");
 					
+				}else if(time.indexOf("-")!=-1){
+					if(time.indexOf("售价")!=-1){
+						time=time.substring(0, time.indexOf("售价"));
+						obj.put("time", time);
+					}
+					dates=time.split("-");
 				}
 				
             String year=dates[0];
@@ -851,7 +1087,7 @@ public class Houseprice {
 	public static void getPrice(String file){
 		Vector<String> pois = FileTool.Load(file, "utf-8");
 		String poi="";
-		 ArrayList UnitPrice=new ArrayList();
+		 ArrayList<Object> UnitPrice=new ArrayList<Object>();
 		 double total=0;
 		 double average=0;
 		try{
