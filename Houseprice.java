@@ -83,23 +83,22 @@ public class Houseprice {
 		
 		//yearMonthDay("H:/房地产可视化/近一年数据分类汇总/fang/resold/json/fang_resold0606-Json.txt");
 		
-		finalCheck("E:/房地产可视化/近一年数据分类汇总/fang/rentout/json/fang_rentout1125_result-Json.txt",
-				   "E:/房地产可视化/近一年数据分类汇总/fang/rentout/原文件/fang_rentout1125_result.txt");
+		finalCheck("E:/房地产可视化/近一年数据分类汇总/5i5j/resold/woaiwojia_resold0314_result.txt-Json.txt");
 		
 	}
-	   public static void finalCheck(String folder,String source){
+	   public static void finalCheck(String folder){
 	    	Vector<String> pois=FileTool.Load(folder, "utf-8");
-	    	Vector<String> sources=FileTool.Load(source, "utf-8");
+	    	//Vector<String> sources=FileTool.Load(source, "utf-8");
 	    	System.out.println("数据总计："+pois.size());
-	    	System.out.println("source总计："+sources.size());
+	    	//System.out.println("source总计："+sources.size());
 			int count=0;
 			
 			for(int i=0;i<pois.size();i++){
 				String poi=pois.elementAt(i);
-				
+				//System.out.println(i);
 				JSONObject obj_poi=JSONObject.fromObject(poi);
 				JSONObject obj= new JSONObject();
-				String sourcepoi=sources.elementAt(i).replace(" ", "");
+				//String sourcepoi=sources.elementAt(i).replace(" ", "");
 				JSONObject date= new JSONObject();
 				
 				//检查哪些元素的内容为null，为null的移除,再将整个obj_poi复制到obj上
@@ -108,11 +107,12 @@ public class Houseprice {
 		            String key = joKeys.next();
 		           // System.out.println(key);
 		            
-		            Object value=obj_poi.get(key);
+		            String value=obj_poi.get(key).toString();
 		            
-		           if(value.equals("\"null\"")){ //\"null\".equals("null")
+		           if(value.equals("null")){ //\"null\".equals("null")
 		        	   //System.out.println("value为空");
 		            }else{
+		            	Tool.delect_content_inBrackets(value, "(", ")");
 		            	obj.put(key, value);
 		            }
 		        } 
@@ -125,7 +125,7 @@ public class Houseprice {
 						obj.remove("cmmunity");
 					}					
 				}
-				
+/*				
 				//将错位信息更正
 				String str=obj.getString("direction");
 				if(str.indexOf("层")!=-1){
@@ -137,7 +137,7 @@ public class Houseprice {
 					obj.put("direction", str);
 					obj.remove("fitment");
 				}
-				
+*/				
 				//将实际发布时间的年月日分别进行获取
 				String time="";
 				try{
@@ -174,9 +174,10 @@ public class Houseprice {
 				
 				//检查是否含有“unit_price”字段
 				try{
-					if(!obj.containsKey("unit_price")){
-						if(!obj.getString("price").equals("\"null\"")&&!obj.getString("area").equals("\"null\"")){
-							String price=obj.getString("price").substring(0, obj.getString("price").indexOf("元/月")).replace("租金：", "");
+					//if(!obj.containsKey("unit_price")){
+					if(obj.containsKey("price")&&obj.containsKey("area")){
+						if(!obj.getString("price").equals("null")&&!obj.getString("area").equals("null")){
+							String price=obj.getString("price").replace("万元", "");//.substring(0, obj.getString("price").indexOf("元/月"))
 							obj.put("price", price);
 							String area=obj.getString("area").replace("�", "");
 							obj.put("area", area);
@@ -195,7 +196,7 @@ public class Houseprice {
 					System.out.println(i);
 				}
 				
-				
+/*				
 				//检查是否含有“region”字段
 				if(obj.containsKey("region")){
 					if(obj.getString("region").equals("null")){
@@ -214,6 +215,7 @@ public class Houseprice {
 						obj.put("property", property);
 					}
 				}
+*/
 				
 				
 				//提取户型的具体数据
@@ -283,18 +285,16 @@ public class Houseprice {
 				}
 				
 				
+/*	
 				//获取交通信息
 				String traffic="";
 				if(sources.elementAt(i).indexOf("<TRAFFIC>")!=-1){
 					traffic=Tool.getStrByKey(sources.elementAt(i), "<TRAFFIC>", "</TRAFFIC>", "</TRAFFIC>");
 					obj.put("traffic", traffic);
 				}
-				
-				
-				
-				
+*/
 
-				FileTool.Dump(obj.toString().replace(" ", ""), folder.replace(".txt", "")+"-tidy.txt", "utf-8");
+				FileTool.Dump(obj.toString(), folder.replace(".txt", "")+"-tidy.txt", "utf-8");
 				count++;
 			}
 			System.out.println("数据完成："+count);
