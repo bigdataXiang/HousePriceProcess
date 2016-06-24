@@ -83,7 +83,7 @@ public class Houseprice {
 		
 		//yearMonthDay("H:/房地产可视化/近一年数据分类汇总/fang/resold/json/fang_resold0606-Json.txt");
 		
-		finalCheck("E:/房地产可视化/近一年数据分类汇总/5i5j/resold/woaiwojia_resold0314_result.txt-Json.txt");
+		finalCheck("E:/房地产可视化/近一年数据分类汇总/5i5j/resold/woaiwojia_resold1214_result.txt-Json.txt");
 		
 	}
 	   public static void finalCheck(String folder){
