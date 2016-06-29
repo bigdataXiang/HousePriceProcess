@@ -9,12 +9,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
+import com.google.gson.JsonSyntaxException;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+import com.svail.gridprocess.GridLayoutLines;
+import com.svail.tomongo.Poi_resold_anjuke;
 import com.svail.util.FileTool;
 import com.svail.util.Tool;
 
@@ -23,7 +27,7 @@ import net.sf.json.JSONObject;
 public class ExportToMongo {
 	
 	public static void main(String[] args) throws IOException {
-		ToMongoDB("","");
+		ToMongoDB("RentoutWithCode","fang");
 	}
 	public static String[] dates={""};
 	public static BasicDBObject transfer(JSONObject poi,String source){
@@ -37,13 +41,17 @@ public class ExportToMongo {
 		}
         if(poi.containsKey("longitude")){
         	if( !poi.get("longitude").equals("null")){
-        		document.put("lng", poi.get("longitude"));
+        		 double longitude=0;
+        		 longitude =Double.parseDouble(poi.get("longitude").toString());
+        		 document.put("lng", longitude);
         	}
         	
 		}
 		if(poi.containsKey("latitude")){
 			if( !poi.get("latitude").equals("null")){
-				document.put("lat", poi.get("latitude"));
+				double latitude=0;
+				latitude = Double.parseDouble(poi.get("latitude").toString());
+				document.put("lat", latitude);
 			}
 			
 		}
@@ -305,6 +313,7 @@ public class ExportToMongo {
 	 */
 	public static void ToMongoDB(String collName,String source){
 		Mongo m;
+		GridLayoutLines.setCode(1000);
 		try {
 			System.out.println("运行开始:");
 			m = new Mongo("192.168.6.9", 27017);
@@ -325,16 +334,23 @@ public class ExportToMongo {
 				List<DBObject> dbList = new ArrayList<DBObject>();  
 				for (int n = 0; n < rds.size(); n ++)
 				{
+					String element="";
 					try{
-						String element=rds.elementAt(n);
+						element=rds.elementAt(n);
 						JSONObject element_obj=JSONObject.fromObject(element);
+						
+						long code = Math.round(GridLayoutLines.setPoiCode(element, 1000));
+						element_obj.put("gridcode", code);
 
-						BasicDBObject obj = transfer(element_obj,source);
+						BasicDBObject document = transfer(element_obj,source);
+						document.put("gridcode", code);
 						//System.out.println(obj);
-						dbList.add(obj);
+						dbList.add(document);
 					}catch(NumberFormatException e){
 						e.printStackTrace();
 					    System.out.println(n);
+					}catch(ClassCastException e){
+						System.out.println(i);
 					}
 					
 
@@ -345,6 +361,7 @@ public class ExportToMongo {
 				coll.createIndex(new BasicDBObject("lat", 1));
 				coll.createIndex(new BasicDBObject("time", 1));
 				coll.createIndex(new BasicDBObject("price", 1));
+				coll.createIndex(new BasicDBObject("gridcode", 1));
 			}
 			
 			
@@ -358,7 +375,8 @@ public class ExportToMongo {
 			// TODO Auto-generated catch block
 			System.out.println("发生异常的原因为 :"+e.getMessage());
 			e.printStackTrace();
-		}	
+		}
 	}
+	
 
 }
