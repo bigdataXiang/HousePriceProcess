@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="filterbuilder">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/HTMLParser-2.0/lib/filterbuilder.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/HTMLParser-2.0/lib/htmllexer.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/HTMLParser-2.0/lib/htmlparser.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/HTMLParser-2.0/lib/sitecapturer.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/HTMLParser-2.0/lib/thumbelina.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

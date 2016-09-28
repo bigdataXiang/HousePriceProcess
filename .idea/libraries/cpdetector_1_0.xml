@@ -1,0 +1,36 @@
+<component name="libraryTable">
+  <library name="cpdetector-1.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/gnujaxp.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/htmlunit-2.15-OSGi.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/json-21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jsoup-1.7.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/mongo-2.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/org.json-chargebee-1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/org.json.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/poi-3.9.jar!/" />
+      <root url="file://$PROJECT_DIR$/lib/cpdetector-1.0.10" />
+      <root url="file://$PROJECT_DIR$/lib/json-lib-2.4" />
+      <root url="file://$PROJECT_DIR$/lib/jcommon-1.0.23" />
+      <root url="file://$PROJECT_DIR$/lib/jfreechart-1.0.19" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="file://$PROJECT_DIR$/lib/htmlunit-2.15/apidocs" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/org.json.jar!/" />
+      <root url="file://$PROJECT_DIR$/lib/jcommon-1.0.23/src/main/java" />
+      <root url="file://$PROJECT_DIR$/lib/jcommon-1.0.23/src/test/java" />
+      <root url="file://$PROJECT_DIR$/lib/jfreechart-1.0.19/experimental" />
+      <root url="file://$PROJECT_DIR$/lib/jfreechart-1.0.19/source" />
+      <root url="file://$PROJECT_DIR$/lib/jfreechart-1.0.19/swt" />
+      <root url="file://$PROJECT_DIR$/lib/jfreechart-1.0.19/tests" />
+      <root url="file://$PROJECT_DIR$/lib/json-lib-2.4" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/lib/cpdetector-1.0.10" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/lib/jcommon-1.0.23" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/lib/jfreechart-1.0.19" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/lib/json-lib-2.4" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/lib/json-lib-2.4" recursive="false" type="SOURCES" />
+  </library>
+</component>
